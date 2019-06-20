@@ -120,17 +120,16 @@ class RecordingConnection:  # pragma no cover (Class useful only when recording 
 
         status = res.status
         print "=>", status
-        headers = res.getheaders()
         output = res.read()
 
         self.__writeLine(str(status))
-        self.__writeLine(str(list(headers)))
+        self.__writeLine(str(list(res.getheaders())))
         if atLeastPython3: # In Py3, return from "read" is bytes
             self.__writeLine(output)
         else:
             self.__writeLine(output.encode("utf-8"))
 
-        return FakeHttpResponse(status, headers, output)
+        return FakeHttpResponse(status, res.getheaders(), output)
 
     def close(self):
         self.__writeLine("")

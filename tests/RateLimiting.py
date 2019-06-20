@@ -40,6 +40,23 @@ class RateLimiting(Framework.TestCase):
         self.assertEqual(self.g.rate_limiting, (4928, 5000))
         self.assertEqual(self.g.rate_limiting_resettime, 1536123356)
 
+    def testSearchRateLimiting(self):
+        self.assertEqual(self.g.rate_limiting, (4991, 5000))
+        self.g.get_user("jacquev6")
+        self.assertEqual(self.g.rate_limiting, (4990, 5000))
+        self.assertEqual(self.g.rate_limiting_resettime, 1561025835)
+        users_list = self.g.search_users("Linus Torvalds")
+        torvalds = users_list[0]
+        self.assertEqual(self.g.rate_limiting, (4990, 5000))
+        self.assertEqual(self.g.rate_limiting_resettime, 1561025835)
+        self.assertEqual(self.g.search_rate_limiting, (29, 30))
+        self.assertEqual(self.g.search_rate_limiting_resettime, 1561022312)
+        self.g.get_user("jacquev6")
+        self.assertEqual(self.g.rate_limiting, (4989, 5000))
+        self.assertEqual(self.g.rate_limiting_resettime, 1561025868)
+        self.assertEqual(self.g.search_rate_limiting, (29, 30))
+        self.assertEqual(self.g.search_rate_limiting_resettime, 1561022312)
+
     def testResetTime(self):
         self.assertEqual(self.g.rate_limiting_resettime, 1536123356)
 

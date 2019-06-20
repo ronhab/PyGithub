@@ -169,6 +169,29 @@ class Github(object):
             self.get_rate_limit()
         return self.__requester.rate_limiting_resettime
 
+    @property
+    def search_rate_limiting(self):
+        """
+        First value is requests remaining, second value is request limit.
+
+        :type: (int, int)
+        """
+        remaining, limit = self.__requester.search_rate_limiting
+        if limit < 0:
+            self.get_rate_limit()
+        return self.__requester.search_rate_limiting
+
+    @property
+    def search_rate_limiting_resettime(self):
+        """
+        Unix timestamp indicating when rate limiting will reset.
+
+        :type: int
+        """
+        if self.__requester.search_rate_limiting_resettime == 0:
+            self.get_rate_limit()
+        return self.__requester.search_rate_limiting_resettime
+
     def get_rate_limit(self):
         """
         Rate limit status for different resources (core/search/graphql).

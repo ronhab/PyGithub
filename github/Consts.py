@@ -34,6 +34,9 @@ REQ_IF_NONE_MATCH = "If-None-Match"
 REQ_IF_MODIFIED_SINCE = "If-Modified-Since"
 PROCESSING_202_WAIT_TIME = 2
 
+RATE_LIMITING_LOW_THRESHOLD = 2
+RATE_LIMITING_SLEEP_SAFE_MARGIN_IN_SECONDS = 10
+
 # ##############################################################################
 # Response Header                                                              #
 # (Lower Case)                                                                 #

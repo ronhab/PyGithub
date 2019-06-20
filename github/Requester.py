@@ -257,6 +257,8 @@ class Requester:
             assert False, "Unknown URL scheme"
         self.rate_limiting = (-1, -1)
         self.rate_limiting_resettime = 0
+        self.search_rate_limiting = (-1, -1)
+        self.search_rate_limiting_resettime = 0
         self.FIX_REPO_GET_GIT_REF = True
         self.per_page = per_page
 
@@ -371,6 +373,22 @@ class Requester:
         if requestHeaders is None:
             requestHeaders = dict()
 
+        is_search_api = url.startswith('/search')
+        
+        if is_search_api:
+            rate_limiting = self.search_rate_limiting
+            rate_limiting_resettime = self.search_rate_limiting_resettime
+        else:
+            rate_limiting = self.rate_limiting
+            rate_limiting_resettime = self.rate_limiting_resettime
+
+        if rate_limiting[0] > -1 and rate_limiting_resettime > 0 and rate_limiting[0] < Consts.RATE_LIMITING_LOW_THRESHOLD:
+            sleep_time = int(rate_limiting_resettime - time.time()) + Consts.RATE_LIMITING_SLEEP_SAFE_MARGIN_IN_SECONDS
+            if sleep_time > 0:
+                print('Rate limit is close... sleeping for %d seconds' % sleep_time)
+                time.sleep(sleep_time)
+                print('Resumed')
+
         self.__authenticate(url, requestHeaders, parameters)
         requestHeaders["User-Agent"] = self.__userAgent
         if self.__apiPreview:
@@ -388,9 +406,17 @@ class Requester:
         status, responseHeaders, output = self.__requestRaw(cnx, verb, url, requestHeaders, encoded_input)
 
         if Consts.headerRateRemaining in responseHeaders and Consts.headerRateLimit in responseHeaders:
-            self.rate_limiting = (int(responseHeaders[Consts.headerRateRemaining]), int(responseHeaders[Consts.headerRateLimit]))
+            rate_limiting = (int(responseHeaders[Consts.headerRateRemaining]), int(responseHeaders[Consts.headerRateLimit]))
+            if is_search_api:
+                self.search_rate_limiting = rate_limiting
+            else:
+                self.rate_limiting = rate_limiting
         if Consts.headerRateReset in responseHeaders:
-            self.rate_limiting_resettime = int(responseHeaders[Consts.headerRateReset])
+            rate_limiting_resettime = int(responseHeaders[Consts.headerRateReset])
+            if is_search_api:
+                self.search_rate_limiting_resettime = rate_limiting_resettime
+            else:
+                self.rate_limiting_resettime = rate_limiting_resettime
 
         if Consts.headerOAuthScopes in responseHeaders:
             self.oauth_scopes = responseHeaders[Consts.headerOAuthScopes].split(", ")
